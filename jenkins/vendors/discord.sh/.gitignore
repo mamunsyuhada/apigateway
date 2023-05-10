@@ -1,0 +1,6 @@
+.discord
+.webhook
+*.swp
+
+send.sh
+
