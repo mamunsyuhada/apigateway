@@ -45,15 +45,19 @@ pipeline {
             steps{
                 echo "============================ BUILD IMAGE ========================"
                 buildDockerImage(commitId, params.PROJECT_NAME)
-
                 unstash 'ws'
             }
         }
         stage('Pushing Image') {
             steps{
                 echo "============================ PUSHING IMAGE ======================"
-                // TODO: push docker image to dockerhub or google contaner registry
-                // removeDockerImage(commitId, params.PROJECT_NAME)
+                script {
+                    def envStage = 'dev'
+
+                    updateDockerImageWithStage(commitId, envStage)
+                    pushDockerImage(commitId, envStage)
+                    sh 'docker image prune'
+                }
             }
         }
         stage('Deployment to Kubernetes Environment'){
@@ -66,12 +70,53 @@ pipeline {
     }
 }
 
-def gcrPush(){
-    
+def getRegistryRepo(){
+    def repository = ''
+    withCredentials([string(credentialsId: 'registrypath', variable: 'REGISTRY')]) {
+        repository += REGISTRY + '/'
+    }
+    repository += params.PROJECT_NAME
+
+    return repository
+}
+
+def pushDockerImage(String commitId, String envStage){
+    def repository = getRegistryRepo()
+    def stageTagOpt = repository + ':' + envStage
+    sh '''
+        STAGE_TAG_OPT="'''+stageTagOpt+'''"
+        docker push $STAGE_TAG_OPT
+    '''
+
+    def commitIdTagOpt = repository + ':' + commitId
+    sh '''
+        COMMIT_ID_TAG_OPT="'''+commitIdTagOpt+'''"
+        docker push $COMMIT_ID_TAG_OPT
+    '''
+}
+
+def updateDockerImageWithStage(String commitId, String envStage){
+    def repository = getRegistryRepo()
+
+    // Remove stage old
+    def rmiOpt = repository + ':' + envStage
+    sh '''
+        RMI_OPT="'''+rmiOpt+'''"
+        docker rmi -f $RMI_OPT &> /dev/null
+    '''
+
+    // Update image (copy image from latest commit)
+    def updateOpt = 'tag ' + repository + ':' + commitId + ' '
+    updateOpt += repository + ':' + envStage 
+    sh '''
+        UPDATE_OPT="'''+updateOpt+'''"
+        docker image $UPDATE_OPT
+    '''
 }
 
 def buildDockerImage(String commitId, String projectName){
     def opt = '--rm --no-cache --pull -t '
+    
     withCredentials([string(credentialsId: 'registrypath', variable: 'REGISTRY')]) {
         opt += REGISTRY + '/'
     }
@@ -125,5 +170,4 @@ def notify(String condition, String projectName) {
         EXE="'''+draftExecutable+'''"
         bash ./jenkins/vendors/discord.sh/discord.sh $EXE
     '''
-
 }
