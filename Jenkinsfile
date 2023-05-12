@@ -17,7 +17,6 @@ pipeline {
         }
         failure {
             echo '============================ FAILED ============================='
-            buildDockerImage(commitId, params.PROJECT_NAME)
             notify('fail', params.PROJECT_NAME)
         }
     }
@@ -42,13 +41,15 @@ pipeline {
             }
         }
         stage('Build Image') {
+            agent { label "docker" }
             steps{
                 echo "============================ BUILD IMAGE ========================"
-                buildDockerImage(commitId, params.PROJECT_NAME)
                 unstash 'ws'
+                buildDockerImage(commitId)
             }
         }
         stage('Pushing Image') {
+            agent { label "docker" }
             steps{
                 echo "============================ PUSHING IMAGE ======================"
                 script {
@@ -112,15 +113,10 @@ def updateDockerImageWithStage(String commitId, String envStage){
         UPDATE_OPT="'''+updateOpt+'''"
         docker image $UPDATE_OPT
     '''
-}
+} 
 
-def buildDockerImage(String commitId, String projectName){
-    def opt = '--rm --no-cache --pull -t '
-    
-    withCredentials([string(credentialsId: 'registrypath', variable: 'REGISTRY')]) {
-        opt += REGISTRY + '/'
-    }
-    opt += projectName + ':' + commitId
+def buildDockerImage(String commitId){
+    def opt = '--rm --no-cache --pull -t ' + getRegistryRepo() + ':' + commitId
 
     sh '''
         OPT="'''+opt+'''"
@@ -129,12 +125,8 @@ def buildDockerImage(String commitId, String projectName){
     '''
 }
 
-def removeDockerImage(String commitId, String projectName){
-    def opt = '-f '
-    withCredentials([string(credentialsId: 'registrypath', variable: 'REGISTRY')]) {
-        opt += REGISTRY + '/'
-    }
-    opt += projectName + ':' + commitId
+def removeDockerImage(String commitId){
+    def opt = '-f ' + getRegistryRepo() + ':' + commitId
 
     sh '''
         OPT="'''+opt+'''"
