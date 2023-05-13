@@ -1,0 +1,8 @@
+apiVersion: networking.gke.io/v1
+kind: ManagedCertificate
+metadata:
+  namespace: bigproject
+  name: apigateway
+spec:
+  domains:
+    - $HOST
