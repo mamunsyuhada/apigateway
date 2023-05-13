@@ -64,10 +64,21 @@ pipeline {
             }
         }
         stage('Deployment to Kubernetes Environment'){
+            when { expression { BRANCH_NAME == 'dev' || BRANCH_NAME == 'prod' } }
+            agent { label "kubectl" }
             steps {
                 echo "============================ DEPLOY TO KUBERNETES ENV ==========="
-                // branch conditional (dev, release, prod)
-                // TODO: deploy app to kubernetes env
+                script {
+                    withCredentials([string(credentialsId: 'apigateway_domain', variable: 'DOMAIN')]){
+                        def imageTarget = getRegistryRepo() + ':' + commitId 
+                        def domain = envStage + '.' + DOMAIN
+                        sh '''
+                            export IMAGE_TARGET="'''+imagetarget+'''"
+                            export HOST="'''+domain+'''"
+                            for f in k8s/*.yaml; do envsubst < $f | kubectl apply -f -; done
+                        '''
+                    }
+                }
             }
         }
     }
@@ -75,11 +86,11 @@ pipeline {
 
 def getRegistryRepo(){
     def repository = ''
-    withCredentials([string(credentialsId: 'registrypath', variable: 'REGISTRY')]) {
-        repository += REGISTRY + '/'
+    withCredentials([
+        string(credentialsId: 'registrypath', variable: 'REGISTRY')
+    ]) {
+        repository += REGISTRY + '/' + params.PROJECT_NAME
     }
-    repository += params.PROJECT_NAME
-
     return repository
 }
 
@@ -139,12 +150,12 @@ def removeDockerImage(String commitId){
 
 def notify(String condition, String projectName) {
     def draftExecutable = ''
-    withCredentials([string(credentialsId: 'discordwebhook', variable: 'WEBHOOK')]) {
-        draftExecutable = ' --webhook-url=' + WEBHOOK
-    }
-
     def url = '/blue/organizations/jenkins/apigateway/activity/'
-    withCredentials([string(credentialsId: 'jenkinshost', variable: 'JENKINSHOST')]){
+    withCredentials([
+        string(credentialsId: 'discordwebhook', variable: 'WEBHOOK'),
+        string(credentialsId: 'jenkinshost', variable: 'JENKINSHOST')
+    ]) {
+        draftExecutable = ' --webhook-url=' + WEBHOOK
         url = JENKINSHOST + url
     }
 
