@@ -4,7 +4,7 @@ metadata:
   namespace: bigproject
   name: apigateway
   annotations:
-    kubernetes.io/ingress.global-static-ip-name: apigateway
+    kubernetes.io/ingress.global-static-ip-name: bigproject-apigateway
     kubernetes.io/ingress.allow-http: "false"
     networking.gke.io/managed-certificates: apigateway
 spec:
