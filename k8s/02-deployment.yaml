@@ -1,8 +1,8 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: apigateway
   namespace: bigproject
+  name: apigateway
 spec:
   selector:
     matchLabels:

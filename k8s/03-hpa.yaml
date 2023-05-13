@@ -1,8 +1,8 @@
 apiVersion: autoscaling/v1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: apigateway
   namespace: bigproject
+  name: apigateway
 spec:
   maxReplicas: 25
   minReplicas: 3
