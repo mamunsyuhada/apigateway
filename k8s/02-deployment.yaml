@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apigateway
+  namespace: bigproject
+spec:
+  selector:
+    matchLabels:
+      app: apigateway
+  strategy:
+    type: RollingUpdate
+  template: #Template for container
+    metadata:
+      labels:
+        app: apigateway
+    spec:
+      containers:
+      - name: apigateway
+        image:  $IMAGE_TARGET
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
+          name: apigateway
+        resources:
+          requests:
+            cpu: 50m
