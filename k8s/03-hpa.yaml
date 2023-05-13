@@ -1,0 +1,13 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: apigateway
+  namespace: bigproject
+spec:
+  maxReplicas: 25
+  minReplicas: 3
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: apigateway
+  targetCPUUtilizationPercentage: 100
