@@ -49,11 +49,13 @@ pipeline {
             }
         }
         stage('Pushing Image') {
+            when { expression { BRANCH_NAME == 'dev' || BRANCH_NAME == 'prod' } }
             agent { label "docker" }
             steps{
-                echo "============================ PUSHING IMAGE ======================"
                 script {
-                    def envStage = 'dev'
+                    def envStage = BRANCH_NAME
+
+                    echo "============================ PUSHING IMAGE TO ${envStage} ======================"
 
                     updateDockerImageWithStage(commitId, envStage)
                     pushDockerImage(commitId, envStage)
@@ -108,12 +110,12 @@ def updateDockerImageWithStage(String commitId, String envStage){
 
     // Update image (copy image from latest commit)
     def updateOpt = 'tag ' + repository + ':' + commitId + ' '
-    updateOpt += repository + ':' + envStage 
+    updateOpt += repository + ':' + envStage
     sh '''
         UPDATE_OPT="'''+updateOpt+'''"
         docker image $UPDATE_OPT
     '''
-} 
+}
 
 def buildDockerImage(String commitId){
     def opt = '--rm --no-cache --pull -t ' + getRegistryRepo() + ':' + commitId
@@ -138,8 +140,8 @@ def removeDockerImage(String commitId){
 def notify(String condition, String projectName) {
     def draftExecutable = ''
     withCredentials([string(credentialsId: 'discordwebhook', variable: 'WEBHOOK')]) {
-        draftExecutable = ' --webhook-url=' + WEBHOOK 
-    }    
+        draftExecutable = ' --webhook-url=' + WEBHOOK
+    }
 
     def url = '/blue/organizations/jenkins/apigateway/activity/'
     withCredentials([string(credentialsId: 'jenkinshost', variable: 'JENKINSHOST')]){
@@ -149,7 +151,7 @@ def notify(String condition, String projectName) {
     draftExecutable += ' --url=' + url
     draftExecutable += ' --title=' + projectName + '#' + currentBuild.number
     draftExecutable += ' --timestamp'
-    
+
     draftExecutable += ' --color='
     if (condition == "success"){
         draftExecutable +='0x49FF00'
