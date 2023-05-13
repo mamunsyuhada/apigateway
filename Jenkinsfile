@@ -71,7 +71,7 @@ pipeline {
                 script {
                     withCredentials([string(credentialsId: 'apigateway_domain', variable: 'DOMAIN')]){
                         def imageTarget = getRegistryRepo() + ':' + commitId 
-                        def domain = envStage + '.' + DOMAIN
+                        def domain = BRANCH_NAME + '.' + DOMAIN
                         sh '''
                             export IMAGE_TARGET="'''+imagetarget+'''"
                             export HOST="'''+domain+'''"
