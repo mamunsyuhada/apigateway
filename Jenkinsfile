@@ -49,6 +49,14 @@ pipeline {
             }
         }
         stage('Build Image') {
+            agent { label "nodejs" }
+            steps{
+                echo "============================ UNIT TESTING ========================"
+                unstash 'ws'
+                sh 'npm run cover'
+            }
+        }
+        stage('Build Image') {
             agent { label "docker" }
             steps{
                 echo "============================ BUILD IMAGE ========================"
