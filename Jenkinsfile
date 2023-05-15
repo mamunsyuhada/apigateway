@@ -40,6 +40,14 @@ pipeline {
                 echo "${commitId}"
             }
         }
+        stage('Unit Testing') {
+            steps{
+                echo "============================ UNIT TESTING ========================"
+                unstash 'ws'
+                npm 'install'
+                npm 'run test:cov'
+            }
+        }
         stage('Build Image') {
             agent { label "docker" }
             steps{
@@ -56,6 +64,22 @@ pipeline {
                     def envStage = BRANCH_NAME
 
                     echo "============================ PUSHING IMAGE TO ${envStage} ======================"
+                    if (env.BRANCH_NAME == 'prod'){
+                        def userInput = input(
+                            message: 'Deploy to production ?',
+                            parameters: [
+                                [
+                                    $class: 'ChoiceParameterDefinition',
+                                    choices: ['no','yes'].join('\n'),
+                                    name: 'input',
+                                    description: 'Menu - select box option'
+                                ]
+                            ]
+                        ) 
+                        if( "${userInput}" == "no"){
+                            sh 'exit 1'
+                        }
+                    }
 
                     updateDockerImageWithStage(commitId, envStage)
                     pushDockerImage(commitId, envStage)
@@ -69,13 +93,15 @@ pipeline {
             steps {
                 echo "============================ DEPLOY TO KUBERNETES ENV ==========="
                 script {
-                    withCredentials([string(credentialsId: 'apigateway_domain', variable: 'DOMAIN')]){
+                    withCredentials([
+                        string(credentialsId: 'apigateway_domain', variable: 'DOMAIN')
+                    ]){
                         def imageTarget = getRegistryRepo() + ':' + commitId 
+                        echo "${imageTarget}"
                         def domain = BRANCH_NAME + '.' + DOMAIN
+
                         sh '''
-                            export IMAGE_TARGET="'''+imagetarget+'''"
-                            export HOST="'''+domain+'''"
-                            for f in k8s/*.yaml; do envsubst < $f | kubectl apply -f -; done
+                            kubectl
                         '''
                     }
                 }

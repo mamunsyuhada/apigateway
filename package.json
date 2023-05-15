@@ -1,5 +1,5 @@
 {
-  "name": "stdops-apigw",
+  "name": "apigateway",
   "version": "0.0.1",
   "description": "",
   "author": "",
@@ -66,5 +66,8 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "volta": {
+    "node": "16.20.0"
   }
 }
