@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  namespace: bigproject
+  name: apigateway
+data:
+  ENV_STAGE: 'dev'
+  HOST: 'dev.bigproject.papasoleh.com'
+  
