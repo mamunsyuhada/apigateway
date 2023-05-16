@@ -17,6 +17,7 @@ pipeline {
         }
         failure {
             echo '============================ FAILED ============================='
+            removeDockerImage(commitId)
             notify('fail', params.PROJECT_NAME)
         }
     }
@@ -46,14 +47,6 @@ pipeline {
                 unstash 'ws'
                 npm 'install'
                 npm 'run test:cov'
-            }
-        }
-        stage('Build Image') {
-            agent { label "nodejs" }
-            steps{
-                echo "============================ UNIT TESTING ========================"
-                unstash 'ws'
-                sh 'npm run cover'
             }
         }
         stage('Build Image') {
