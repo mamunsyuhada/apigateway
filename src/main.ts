@@ -15,8 +15,9 @@ async function bootstrap() {
     optionsSuccessStatus: 204,
   });
 
+  const envStage = config.get<string>('ENV_STAGE', 'local')
   const docConfig = new DocumentBuilder()
-    .setTitle('Big Project - Studi Devops')
+    .setTitle(`Big Project - Studi Devops - Env: ${envStage}`)
     .setDescription('API Documentation for Big Project v1')
     .setVersion('1')
     .build();
@@ -29,7 +30,9 @@ async function bootstrap() {
       'https://static-00.iconduck.com/assets.00/nestjs-icon-512x510-9nvpcyc3.png',
   });
 
-  await app.listen(config.get<number>('PORT', 80));
+
+  const port = config.get<number>('PORT', 3000)
+  await app.listen(port);
   Logger.debug('Swagger at http://localhost:3000/api-docs');
 }
 bootstrap();
