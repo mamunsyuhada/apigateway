@@ -13,12 +13,15 @@ pipeline {
     post {
         success {
             echo '============================ SUCCEED ============================'
-            notify('success', params.PROJECT_NAME)
+            sh '''
+                cat ./jenkins/scripts/deployed.sh | COMMIT_ID="'''+commitId+'''" BRANCH="'''+BRANCH_NAME+'''" envsubst | bash -f
+            '''
         }
         failure {
-            agent { label "docker" }
             echo '============================ FAILED ============================='
-            notify('fail', params.PROJECT_NAME)
+            sh '''
+                cat ./jenkins/scripts/failed.sh | COMMIT_ID="'''+commitId+'''" BRANCH="'''+BRANCH_NAME+'''" envsubst | bash -f
+            '''
         }
     }
     stages {
@@ -43,9 +46,10 @@ pipeline {
         }
         stage('Unit Testing') {
             steps{
-                echo "============================ UNIT TESTING ========================"
+                echo "================== LINTING & UNIT TESTING ========================"
                 unstash 'ws'
                 npm 'install'
+                npm 'run lint'
                 npm 'run test:cov'
             }
         }
@@ -84,7 +88,6 @@ pipeline {
 
                     updateDockerImageWithStage(commitId, envStage)
                     pushDockerImage(commitId, envStage)
-                    sh 'docker image prune -f'
                 }
             }
         }
@@ -105,24 +108,13 @@ pipeline {
                             sh '${swith_to_dev_cluster} && kubectl config get-contexts'
                         }
                     }
-                    sh 'kubectl config set-context --current --namespace=bigproject'
                     sh '''
-                        kustomize build . | COMMITID="'''+commitId+'''" envsubst | kubectl apply -f -
+                        kustomize build . | ENV_STAGE="'''+env.BRANCH_NAME+'''" COMMITID="'''+commitId+'''" envsubst | kubectl apply -f -
                     '''
                 }
             }
         }
     }
-}
-
-def getRegistryRepo(){
-    def repository = ''
-    withCredentials([
-        string(credentialsId: 'registrypath', variable: 'REGISTRY')
-    ]) {
-        repository += REGISTRY + '/' + params.PROJECT_NAME
-    }
-    return repository
 }
 
 def pushDockerImage(String commitId, String envStage){
@@ -169,41 +161,12 @@ def buildDockerImage(String commitId){
     '''
 }
 
-// def removeDockerImage(String commitId){
-//     def opt = '-f ' + getRegistryRepo() + ':' + commitId
-
-//     sh '''
-//         OPT="'''+opt+'''"
-//         docker rmi $OPT
-//         docker images
-//     '''
-// }
-
-def notify(String condition, String projectName) {
-    def draftExecutable = ''
-    def url = '/blue/organizations/jenkins/bigproject-apigateway/activity'
+def getRegistryRepo(){
+    def repository = ''
     withCredentials([
-        string(credentialsId: 'discordwebhook', variable: 'WEBHOOK'),
-        string(credentialsId: 'jenkinshost', variable: 'JENKINSHOST')
+        string(credentialsId: 'registrypath', variable: 'REGISTRY')
     ]) {
-        draftExecutable = ' --webhook-url=' + WEBHOOK
-        url = JENKINSHOST + url
+        repository += REGISTRY + '/' + params.PROJECT_NAME
     }
-
-    draftExecutable += ' --url=' + url
-    draftExecutable += ' --title=' + projectName + '#' + currentBuild.number
-    draftExecutable += ' --timestamp'
-
-    draftExecutable += ' --color='
-    if (condition == "success"){
-        draftExecutable +='0x49FF00'
-    }
-    if (condition == "fail"){
-        draftExecutable += '0xFF1E1E'
-    }
-
-    sh '''
-        EXE="'''+draftExecutable+'''"
-        bash ./jenkins/vendors/discord.sh/discord.sh $EXE
-    '''
+    return repository
 }

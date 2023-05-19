@@ -5,4 +5,4 @@ metadata:
   name: apigateway
 spec:
   domains:
-    - dev-api.bigproject.papasoleh.com
+    - ${ENV_STAGE}.apigateway.bigproject.papasoleh.com

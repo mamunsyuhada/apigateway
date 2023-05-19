@@ -4,18 +4,18 @@ metadata:
   namespace: bigproject
   name: apigateway
   annotations:
-    kubernetes.io/ingress.global-static-ip-name: 'dev-api-bigproject'
+    kubernetes.io/ingress.global-static-ip-name: ${ENV_STAGE}-api-bigproject
     kubernetes.io/ingress.allow-http: 'false'
     networking.gke.io/managed-certificates: apigateway
 spec:
   rules:
-  - host: dev-api.bigproject.papasoleh.com
+  - host: ${ENV_STAGE}.apigateway.bigproject.papasoleh.com
     http:
       paths:
       - pathType: ImplementationSpecific
         path: /*
         backend:
           service:
-            name: apigateway
+            name: apigateway-svc
             port:
               number: 3000

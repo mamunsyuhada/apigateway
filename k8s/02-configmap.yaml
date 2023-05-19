@@ -4,5 +4,5 @@ metadata:
   namespace: bigproject
   name: apigateway
 data:
-  ENV_STAGE: 'dev'
+  ENV_STAGE: $ENV_STAGE
   PORT: '3000'

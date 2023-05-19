@@ -15,7 +15,7 @@ spec:
     rollingUpdate:
       maxSurge: 25%
       maxUnavailable: 25%
-  template: #Template for container
+  template:
     metadata:
       labels:
         app: apigateway
