@@ -23,7 +23,7 @@ spec:
       restartPolicy: Always
       containers:
       - name: apigateway
-        image:  asia.gcr.io/plenary-line-385613/apigateway:dev
+        image:  asia.gcr.io/plenary-line-385613/apigateway:$COMMITID
         imagePullPolicy: Always
         envFrom:
         - configMapRef:

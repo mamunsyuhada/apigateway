@@ -16,8 +16,8 @@ pipeline {
             notify('success', params.PROJECT_NAME)
         }
         failure {
+            agent { label "docker" }
             echo '============================ FAILED ============================='
-            removeDockerImage(commitId)
             notify('fail', params.PROJECT_NAME)
         }
     }
@@ -84,7 +84,7 @@ pipeline {
 
                     updateDockerImageWithStage(commitId, envStage)
                     pushDockerImage(commitId, envStage)
-                    sh 'docker image prune'
+                    sh 'docker image prune -f'
                 }
             }
         }
@@ -106,7 +106,9 @@ pipeline {
                         }
                     }
                     sh 'kubectl config set-context --current --namespace=bigproject'
-                    sh 'kubectl apply -k .'
+                    sh '''
+                        kustomize build . | COMMITID="'''+commitId+'''" envsubst | kubectl apply -f -
+                    '''
                 }
             }
         }
@@ -167,19 +169,19 @@ def buildDockerImage(String commitId){
     '''
 }
 
-def removeDockerImage(String commitId){
-    def opt = '-f ' + getRegistryRepo() + ':' + commitId
+// def removeDockerImage(String commitId){
+//     def opt = '-f ' + getRegistryRepo() + ':' + commitId
 
-    sh '''
-        OPT="'''+opt+'''"
-        docker rmi $OPT
-        docker images
-    '''
-}
+//     sh '''
+//         OPT="'''+opt+'''"
+//         docker rmi $OPT
+//         docker images
+//     '''
+// }
 
 def notify(String condition, String projectName) {
     def draftExecutable = ''
-    def url = '/blue/organizations/jenkins/apigateway/activity/'
+    def url = '/blue/organizations/jenkins/bigproject-apigateway/activity'
     withCredentials([
         string(credentialsId: 'discordwebhook', variable: 'WEBHOOK'),
         string(credentialsId: 'jenkinshost', variable: 'JENKINSHOST')
