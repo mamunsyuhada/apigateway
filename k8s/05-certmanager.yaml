@@ -5,4 +5,4 @@ metadata:
   name: apigateway
 spec:
   domains:
-    - $HOST
+    - dev-api.bigproject.papasoleh.com

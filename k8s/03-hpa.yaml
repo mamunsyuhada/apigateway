@@ -4,7 +4,7 @@ metadata:
   namespace: bigproject
   name: apigateway
 spec:
-  maxReplicas: 25
+  maxReplicas: 10
   minReplicas: 3
   scaleTargetRef:
     apiVersion: apps/v1

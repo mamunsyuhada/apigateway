@@ -3,24 +3,38 @@ kind: Deployment
 metadata:
   namespace: bigproject
   name: apigateway
+  annotations:
+    configmap.reloader.stakater.com/reload: apigateway
+    secret.reloader.stakater.com/reload: apigateway
 spec:
   selector:
     matchLabels:
       app: apigateway
   strategy:
     type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
   template: #Template for container
     metadata:
       labels:
         app: apigateway
     spec:
+      restartPolicy: Always
       containers:
       - name: apigateway
-        image:  $IMAGE_TARGET
+        image:  asia.gcr.io/plenary-line-385613/apigateway:dev
         imagePullPolicy: Always
+        envFrom:
+        - configMapRef:
+            name: apigateway
         ports:
-        - containerPort: 80
+        - containerPort: 3000
           name: apigateway
         resources:
           requests:
             cpu: 50m
+            memory: 50Mi
+          limits:
+            cpu: 128m
+            memory: 500Mi
