@@ -90,21 +90,23 @@ pipeline {
         }
         stage('Deployment to Kubernetes Environment'){
             when { expression { BRANCH_NAME == 'dev' || BRANCH_NAME == 'prod' } }
-            agent { label "kubectl" }
             steps {
                 echo "============================ DEPLOY TO KUBERNETES ENV ==========="
                 script {
                     withCredentials([
-                        string(credentialsId: 'apigateway_domain', variable: 'DOMAIN')
+                        string(credentialsId: 'swith_to_prod_cluster', variable: 'swith_to_prod_cluster'),
+                        string(credentialsId: 'swith_to_dev_cluster', variable: 'swith_to_dev_cluster')
                     ]){
-                        def imageTarget = getRegistryRepo() + ':' + commitId 
-                        echo "${imageTarget}"
-                        def domain = BRANCH_NAME + '.' + DOMAIN
+                        if (env.BRANCH_NAME == 'prod'){
+                            sh '${swith_to_prod_cluster} && kubectl config get-contexts'
+                        }
 
-                        sh '''
-                            kubectl
-                        '''
+                        if (env.BRANCH_NAME == 'dev'){
+                            sh '${swith_to_dev_cluster} && kubectl config get-contexts'
+                        }
                     }
+                    sh 'kubectl config set-context --current --namespace=bigproject'
+                    sh 'kubectl apply -k .'
                 }
             }
         }
