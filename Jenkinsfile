@@ -14,13 +14,18 @@ pipeline {
         success {
             echo '============================ SUCCEED ============================'
             sh '''
-                cat ./jenkins/scripts/deployed.sh | COMMIT_ID="'''+commitId+'''" BRANCH="'''+BRANCH_NAME+'''" envsubst | bash -f
+                BUILD_NUMBER="'''+BUILD_NUMBER+'''"
+                COMMIT_ID="'''+commitId+'''"
+                BRANCH="'''+BRANCH_NAME+'''"
+                cat ./jenkins/scripts/deployed.sh | envsubst | bash -f
             '''
         }
         failure {
             echo '============================ FAILED ============================='
             sh '''
-                cat ./jenkins/scripts/failed.sh | COMMIT_ID="'''+commitId+'''" BRANCH="'''+BRANCH_NAME+'''" envsubst | bash -f
+            COMMIT_ID="'''+commitId+'''"
+            BRANCH="'''+BRANCH_NAME+'''"
+                cat ./jenkins/scripts/failed.sh | envsubst | bash -f
             '''
         }
     }

@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   namespace: bigproject
-  name: apigateway
+  name: apigateway-configmap
 data:
   ENV_STAGE: $ENV_STAGE
   PORT: '3000'

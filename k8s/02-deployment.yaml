@@ -27,7 +27,7 @@ spec:
         imagePullPolicy: Always
         envFrom:
         - configMapRef:
-            name: apigateway
+            name: apigateway-configmap
         ports:
         - containerPort: 3000
           name: apigateway

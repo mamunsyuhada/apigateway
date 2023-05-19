@@ -2,7 +2,7 @@ apiVersion: networking.gke.io/v1
 kind: ManagedCertificate
 metadata:
   namespace: bigproject
-  name: apigateway
+  name: apigateway-cert
 spec:
   domains:
     - ${ENV_STAGE}.apigateway.bigproject.papasoleh.com

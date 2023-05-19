@@ -1,19 +1,22 @@
-apiVersion: autoscaling/v1
+apiVersion: autoscaling/v2beta2
 kind: HorizontalPodAutoscaler
 metadata:
   namespace: bigproject
   name: apigateway-scaler
 spec:
-  maxReplicas: 10
-  minReplicas: 3
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
     name: apigateway
+  maxReplicas: 10
+  minReplicas: 3
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 60
   metrics:
     - type: Resource
       resource:
         name: cpu
         target:
           type: Utilization
-          averageUtilization: 50
+          averageUtilization: 20
