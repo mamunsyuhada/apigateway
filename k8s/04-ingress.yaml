@@ -2,10 +2,12 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   namespace: bigproject
-  name: apigateway
+  name: apigateway-ingress
   annotations:
+    kubernetes.io/ingress.class: "gce"
     kubernetes.io/ingress.global-static-ip-name: ${ENV_STAGE}-api-bigproject
-    kubernetes.io/ingress.allow-http: 'false'
+    kubernetes.io/ingress.allow-http: "false"
+    kubernetes.io/ssl-redirect: "true"
     networking.gke.io/managed-certificates: apigateway-cert
 spec:
   rules:
@@ -13,7 +15,7 @@ spec:
     http:
       paths:
       - pathType: ImplementationSpecific
-        path: /*
+        path: "/*"
         backend:
           service:
             name: apigateway-svc
