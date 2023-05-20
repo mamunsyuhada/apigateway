@@ -2,7 +2,7 @@ bash ./jenkins/vendors/discord.sh/discord.sh \
   --webhook-url="$WEBHOOK" \
   --description="Workspace: ${PROJECT_NAME}" \
   --title "Failed to deploy" \
-  --url "${JENKINS_HOST}/blue/organizations/jenkins/bigproject-apigateway/activity" \
+  --url "${JENKINS_HOST}/blue/organizations/jenkins/bigproject-apigateway/detail/${BRANCH}/${BUILD_NUMBER}" \
   --avatar="https://www.jenkins.io/images/logos/fire/256.png" \
   --description="Check your pipeline to see the problem" \
   --field "Branch; ${BRANCH}" \
