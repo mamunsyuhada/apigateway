@@ -81,7 +81,7 @@ pipeline {
                     echo "============================ PUSHING IMAGE TO ${envStage} ======================"
                     if (env.BRANCH_NAME == 'prod'){
                         sh '''
-                            cat ./jenkins/scripts/failed.sh | \\
+                            cat ./jenkins/scripts/needaproval.sh | \\
                                 BUILD_NUMBER="'''+BUILD_NUMBER+'''" \\
                                 COMMIT_ID="'''+commitId+'''" \\
                                 BRANCH="'''+BRANCH_NAME+'''" \\
