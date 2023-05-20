@@ -14,18 +14,23 @@ pipeline {
         success {
             echo '============================ SUCCEED ============================'
             sh '''
-                BUILD_NUMBER="'''+BUILD_NUMBER+'''"
-                COMMIT_ID="'''+commitId+'''"
-                BRANCH="'''+BRANCH_NAME+'''"
-                cat ./jenkins/scripts/deployed.sh | envsubst | bash -f
+                cat ./jenkins/scripts/deployed.sh | \\
+                    BUILD_NUMBER="'''+BUILD_NUMBER+'''" \\
+                    COMMIT_ID="'''+commitId+'''" \\
+                    BRANCH="'''+BRANCH_NAME+'''" \\
+                    envsubst | \\
+                    bash -f
             '''
         }
         failure {
             echo '============================ FAILED ============================='
             sh '''
-            COMMIT_ID="'''+commitId+'''"
-            BRANCH="'''+BRANCH_NAME+'''"
-                cat ./jenkins/scripts/failed.sh | envsubst | bash -f
+                cat ./jenkins/scripts/failed.sh | \\
+                    BUILD_NUMBER="'''+BUILD_NUMBER+'''" \\
+                    COMMIT_ID="'''+commitId+'''" \\
+                    BRANCH="'''+BRANCH_NAME+'''" \\
+                    envsubst | \\
+                    bash -f
             '''
         }
     }
@@ -75,6 +80,14 @@ pipeline {
 
                     echo "============================ PUSHING IMAGE TO ${envStage} ======================"
                     if (env.BRANCH_NAME == 'prod'){
+                        sh '''
+                            cat ./jenkins/scripts/failed.sh | \\
+                                BUILD_NUMBER="'''+BUILD_NUMBER+'''" \\
+                                COMMIT_ID="'''+commitId+'''" \\
+                                BRANCH="'''+BRANCH_NAME+'''" \\
+                                envsubst | \\
+                                bash -f
+                        '''
                         def userInput = input(
                             message: 'Deploy to production ?',
                             parameters: [
