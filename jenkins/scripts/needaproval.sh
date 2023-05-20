@@ -1,0 +1,11 @@
+bash ./jenkins/vendors/discord.sh/needaproval.sh \
+  --webhook-url="$WEBHOOK" \
+  --description="Workspace: ${PROJECT_NAME}" \
+  --title "Need approval to deploy" \
+  --url "${JENKINS_HOST}/blue/organizations/jenkins/bigproject-apigateway/detail/${BRANCH}/${BUILD_NUMBER}" \
+  --avatar="https://www.jenkins.io/images/logos/kongfu/256.png" \
+  --description="click link above to aprove deployment" \
+  --field "Branch; ${BRANCH}" \
+  --field "Commit; ${COMMIT_ID}" \
+  --timestamp \
+  --color=0xFFBB00
