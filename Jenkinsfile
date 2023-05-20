@@ -72,29 +72,33 @@ pipeline {
             }
         }
         stage('Need Approval') {
-            agent { label "kubectl" }
+            agent any
             when { expression { BRANCH_NAME == 'prod' } }
-            sh '''
-                cat ./jenkins/scripts/needaproval.sh | \\
-                    BUILD_NUMBER="'''+BUILD_NUMBER+'''" \\
-                    COMMIT_ID="'''+commitId+'''" \\
-                    BRANCH="'''+BRANCH_NAME+'''" \\
-                    envsubst | \\
-                    bash -f
-            '''
-            def userInput = input(
-                message: 'Deploy to production ?',
-                parameters: [
-                    [
-                        $class: 'ChoiceParameterDefinition',
-                        choices: ['no','yes'].join('\n'),
-                        name: 'input',
-                        description: 'Menu - select box option'
-                    ]
-                ]
-            ) 
-            if( "${userInput}" == "no"){
-                sh 'exit 1'
+            steps {
+                script {
+                    sh 'pwd'
+                    sh '''
+                        cat ./jenkins/scripts/approval.sh | \\
+                            BUILD_NUMBER="'''+BUILD_NUMBER+'''" \\
+                            COMMIT_ID="'''+commitId+'''" \\
+                            BRANCH="'''+BRANCH_NAME+'''" \\
+                            envsubst | bash -f
+                    '''
+                    def userInput = input(
+                        message: 'Deploy to production ?',
+                        parameters: [
+                            [
+                                $class: 'ChoiceParameterDefinition',
+                                choices: ['no','yes'].join('\n'),
+                                name: 'input',
+                                description: 'Menu - select box option'
+                            ]
+                        ]
+                    ) 
+                    if( "${userInput}" == "no"){
+                        sh 'exit 1'
+                    }
+                }
             }
         }
         stage('Pushing Image') {

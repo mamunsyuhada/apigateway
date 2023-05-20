@@ -1,4 +1,4 @@
-bash ./jenkins/vendors/discord.sh/needaproval.sh \
+bash ./jenkins/vendors/discord.sh/discord.sh \
   --webhook-url="$WEBHOOK" \
   --description="Workspace: ${PROJECT_NAME}" \
   --title "Need approval to deploy" \
