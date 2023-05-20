@@ -71,39 +71,39 @@ pipeline {
                 buildDockerImage(commitId)
             }
         }
+        stage('Need Approval') {
+            agent { label "kubectl" }
+            when { expression { BRANCH_NAME == 'prod' } }
+            sh '''
+                cat ./jenkins/scripts/needaproval.sh | \\
+                    BUILD_NUMBER="'''+BUILD_NUMBER+'''" \\
+                    COMMIT_ID="'''+commitId+'''" \\
+                    BRANCH="'''+BRANCH_NAME+'''" \\
+                    envsubst | \\
+                    bash -f
+            '''
+            def userInput = input(
+                message: 'Deploy to production ?',
+                parameters: [
+                    [
+                        $class: 'ChoiceParameterDefinition',
+                        choices: ['no','yes'].join('\n'),
+                        name: 'input',
+                        description: 'Menu - select box option'
+                    ]
+                ]
+            ) 
+            if( "${userInput}" == "no"){
+                sh 'exit 1'
+            }
+        }
         stage('Pushing Image') {
-            when { expression { BRANCH_NAME == 'dev' || BRANCH_NAME == 'prod' } }
             agent { label "docker" }
+            when { expression { BRANCH_NAME == 'dev' || BRANCH_NAME == 'prod' } }
             steps{
                 script {
                     def envStage = BRANCH_NAME
-
                     echo "============================ PUSHING IMAGE TO ${envStage} ======================"
-                    if (env.BRANCH_NAME == 'prod'){
-                        sh '''
-                            cat ./jenkins/scripts/failed.sh | \\
-                                BUILD_NUMBER="'''+BUILD_NUMBER+'''" \\
-                                COMMIT_ID="'''+commitId+'''" \\
-                                BRANCH="'''+BRANCH_NAME+'''" \\
-                                envsubst | \\
-                                bash -f
-                        '''
-                        def userInput = input(
-                            message: 'Deploy to production ?',
-                            parameters: [
-                                [
-                                    $class: 'ChoiceParameterDefinition',
-                                    choices: ['no','yes'].join('\n'),
-                                    name: 'input',
-                                    description: 'Menu - select box option'
-                                ]
-                            ]
-                        ) 
-                        if( "${userInput}" == "no"){
-                            sh 'exit 1'
-                        }
-                    }
-
                     updateDockerImageWithStage(commitId, envStage)
                     pushDockerImage(commitId, envStage)
                 }
