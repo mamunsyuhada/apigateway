@@ -65,6 +65,7 @@ pipeline {
         }
         stage('Build Image') {
             agent { label "docker" }
+            when { expression { BRANCH_NAME == 'dev' || BRANCH_NAME == 'prod' } }
             steps{
                 echo "============================ BUILD IMAGE ========================"
                 unstash 'ws'
