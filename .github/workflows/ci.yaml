@@ -1,0 +1,61 @@
+name: CI Pipeline
+on:
+  push:
+    branches:
+      - '*'
+
+jobs:
+  continuous-integration:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set environment variable
+        run: echo "VERSION=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 14
+
+      - name: Display Node.js version
+        run: node --version
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run coverage test
+        run: npm run test:cov
+
+      - name: Build Docker image
+        run: docker build --rm --no-cache --pull -t asia-docker.pkg.dev/plenary-line-385613/apigateway:${{ env.VERSION }} .
+
+      - name: Push Image to Docker registry (Development)
+        if: ${{ github.ref == 'refs/heads/dev' }}
+        run: |
+          # Log in to your container registry (Development)
+          echo ${{ secrets.GCR_SERVICE_KEY }} | docker login -u _json_key --password-stdin https://gcr.io
+
+          # Tag the image with the semantic version (Development)
+          docker tag asia-docker.pkg.dev/plenary-line-385613/apigateway:${{ env.VERSION }} asia-docker.pkg.dev/plenary-line-385613/apigateway:dev
+
+          # Push the image (Development)
+          docker push asia-docker.pkg.dev/plenary-line-385613/apigateway:${{ env.VERSION }}
+          docker push asia-docker.pkg.dev/plenary-line-385613/apigateway:dev
+
+      - name: Push to Docker registry (Production)
+        if: ${{ github.ref == 'refs/heads/prod' }}
+        run: |
+          # Log in to your container registry (Production)
+          echo ${{ secrets.GCR_SERVICE_KEY }} | docker login -u _json_key --password-stdin https://gcr.io
+
+          # Tag the image with the semantic version (Production)
+          docker tag asia-docker.pkg.dev/plenary-line-385613/apigateway:${{ env.VERSION }} asia-docker.pkg.dev/plenary-line-385613/apigateway:prod
+
+          # Push the image (Production)
+          docker push asia-docker.pkg.dev/plenary-line-385613/apigateway:${{ env.VERSION }}
+          docker push asia-docker.pkg.dev/plenary-line-385613/apigateway:prod
